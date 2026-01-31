@@ -8,12 +8,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/srnivya/cicd-sonar-docker.git'
-            }
-        }
-
         stage('Build & Test') {
             steps {
                 sh '''
