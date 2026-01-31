@@ -8,13 +8,10 @@ pipeline {
 
     stages {
 
-    stage('Build & Test') {
-    steps {
-        echo "Build & test stage executed successfully"
-    }
-}
-
- }
+        stage('Build & Test') {
+            steps {
+                echo "Build & test stage executed"
+            }
         }
 
         stage('SonarQube Analysis') {
