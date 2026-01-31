@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = "srnivya/cicd-sonar-docker"
+        SONARQUBE_SERVER = "sonarqube"
+    }
+
     stages {
 
         stage('Build & Test') {
@@ -33,5 +38,30 @@ pipeline {
         }
 
         stage('Docker Build') {
-            s
+            steps {
+                echo 'Docker build stage executed'
+            }
+        }
 
+        stage('Push to DockerHub') {
+            steps {
+                echo 'Push to DockerHub stage executed'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo 'Deploy stage executed'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline completed successfully ✅'
+        }
+        failure {
+            echo 'Pipeline failed ❌'
+        }
+    }
+}
