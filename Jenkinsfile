@@ -1,28 +1,24 @@
 pipeline {
     agent any
 
-    environment {
-        IMAGE_NAME = "srnivya/cicd-sonar-docker"
-        SONARQUBE_SERVER = "SonarQubeServer"
-    }
-
     stages {
 
         stage('Build & Test') {
             steps {
-                echo "Build & test stage executed"
+                echo 'Build & test stage executed'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQubeServer') {
+                withSonarQubeEnv('sonarqube') {
                     sh '''
-                    sonar-scanner \
-                    -Dsonar.projectKey=cicd-sonar-docker \
-                    -Dsonar.sources=. \
-                    -Dsonar.host.url=http://localhost:9000 \
-                    -Dsonar.login=$SONAR_AUTH_TOKEN
+                        echo "Running SonarQube analysis"
+                        sonar-scanner \
+                        -Dsonar.projectKey=cicd-demo \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=$SONAR_HOST_URL \
+                        -Dsonar.login=$SONAR_AUTH_TOKEN
                     '''
                 }
             }
@@ -30,50 +26,12 @@ pipeline {
 
         stage('Quality Gate') {
             steps {
-                timeout(time: 5, unit: 'MINUTES') {
+                timeout(time: 2, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
             }
         }
 
         stage('Docker Build') {
-            steps {
-                sh "docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} ."
-            }
-        }
-
-        stage('Push to DockerHub') {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh '''
-                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                    docker push ${IMAGE_NAME}:${BUILD_NUMBER}
-                    '''
-                }
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                sh '''
-                docker rm -f cicd-app || true
-                docker run -d --name cicd-app -p 5000:5000 ${IMAGE_NAME}:${BUILD_NUMBER}
-                '''
-            }
-        }
-    }
-
-    post {
-        success {
-            echo "Pipeline completed successfully 🎉"
-        }
-        failure {
-            echo "Pipeline failed ❌"
-        }
-    }
-}
+            s
 
