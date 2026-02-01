@@ -21,14 +21,12 @@ pipeline {
             }
         }
 
-        stage('Quality Gate') {
-            steps {
-                // Wait for Quality Gate result
-                timeout(time: 5, unit: 'MINUTES') {
-                    // Fail the build if the Quality Gate is not passed
-                    waitForQualityGate abortPipeline: true
-                }
-            }
+       stage('Quality Gate') {
+    steps {
+        timeout(time: 2, unit: 'MINUTES') {
+            waitForQualityGate(abortPipeline: true)
         }
+    }
+}
     }
 }
