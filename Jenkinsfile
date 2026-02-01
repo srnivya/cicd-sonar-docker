@@ -1,76 +1,68 @@
 pipeline {
     agent any
 
-    tools {
-        sonarScanner 'SonarScanner'
-    }
-
     environment {
-        DOCKER_IMAGE = 'srnivya/cicd-sonar-docker'
-        DOCKER_TAG = 'latest'
-        DOCKERHUB_CREDENTIALS = 'dockerhub-creds'
-        SONARQUBE_SERVER = 'sonarqube'
+        IMAGE_NAME = "srnivya/cicd-sonar-docker"
+        IMAGE_TAG  = "latest"
+        DOCKER_CREDS = "dockerhub-creds"
     }
 
     stages {
 
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
                 checkout scm
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv("${SONARQUBE_SERVER}") {
-                    bat '''
-                    sonar-scanner ^
-                    -Dsonar.projectKey=cicd-sonar-docker ^
-                    -Dsonar.projectName=cicd-sonar-docker ^
-                    -Dsonar.sources=.
-                    '''
-                }
-            }
-        }
-
-        stage('Docker Build') {
+        stage('Verify Files') {
             steps {
                 bat '''
-                docker version
-                docker build -t %DOCKER_IMAGE%:%DOCKER_TAG% .
+                echo Listing workspace:
+                dir
                 '''
             }
         }
 
-        stage('Docker Login') {
+        stage('Clean Old Image') {
+            steps {
+                bat '''
+                docker rmi -f %IMAGE_NAME%:%IMAGE_TAG% || exit 0
+                '''
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                bat '''
+                docker build --no-cache -t %IMAGE_NAME%:%IMAGE_TAG% .
+                '''
+            }
+        }
+
+        stage('Push to DockerHub') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: DOCKERHUB_CREDENTIALS,
+                    credentialsId: DOCKER_CREDS,
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
                     bat '''
                     echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+                    docker push %IMAGE_NAME%:%IMAGE_TAG%
+                    docker logout
                     '''
                 }
-            }
-        }
-
-        stage('Docker Push') {
-            steps {
-                bat '''
-                docker push %DOCKER_IMAGE%:%DOCKER_TAG%
-                '''
             }
         }
     }
 
     post {
         success {
-            echo '✅ Pipeline completed successfully'
+            echo "✅ Image pushed to DockerHub successfully"
         }
         failure {
-            echo '❌ Pipeline failed'
+            echo "❌ Pipeline failed"
         }
     }
 }
