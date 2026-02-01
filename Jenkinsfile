@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        sonarScanner 'son'   // Name of SonarScanner in Jenkins
+        sonarScanner 'SonarScanner'   // Name of SonarScanner in Jenkins
     }
 
     stages {
