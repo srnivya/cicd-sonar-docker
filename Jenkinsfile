@@ -5,6 +5,10 @@ pipeline {
         sonarScanner 'SonarScanner'
     }
 
+    environment {
+        DOCKER_IMAGE = 'sonarsource/sonar-scanner-cli:latest' // Sonar Scanner Docker image
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -14,8 +18,12 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sonarqube') {
-                    sh 'sonar-scanner'
+                script {
+                    docker.image(DOCKER_IMAGE).inside {
+                        withSonarQubeEnv('sonarqube') {
+                            sh 'sonar-scanner'
+                        }
+                    }
                 }
             }
         }
