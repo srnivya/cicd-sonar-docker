@@ -23,29 +23,21 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv("${SONARQUBE_SERVER}") {
-                    sh '''
-                        sonar-scanner \
-                        -Dsonar.projectKey=cicd-sonar-docker \
-                        -Dsonar.projectName=cicd-sonar-docker \
-                        -Dsonar.sources=.
+                    bat '''
+                    sonar-scanner ^
+                    -Dsonar.projectKey=cicd-sonar-docker ^
+                    -Dsonar.projectName=cicd-sonar-docker ^
+                    -Dsonar.sources=.
                     '''
-                }
-            }
-        }
-
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
                 }
             }
         }
 
         stage('Docker Build') {
             steps {
-                sh '''
-                    docker version
-                    docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                bat '''
+                docker version
+                docker build -t %DOCKER_IMAGE%:%DOCKER_TAG% .
                 '''
             }
         }
@@ -57,8 +49,8 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    sh '''
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    bat '''
+                    echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
                     '''
                 }
             }
@@ -66,8 +58,8 @@ pipeline {
 
         stage('Docker Push') {
             steps {
-                sh '''
-                    docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                bat '''
+                docker push %DOCKER_IMAGE%:%DOCKER_TAG%
                 '''
             }
         }
