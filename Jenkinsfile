@@ -1,67 +1,23 @@
 pipeline {
     agent any
 
-    environment {
-        IMAGE_NAME = "srnivya/cicd-sonar-docker"
-        SONARQUBE_SERVER = "sonarqube"
+    tools {
+        sonarScanner 'SonarScanner'
     }
 
     stages {
-
-        stage('Build & Test') {
+        stage('Checkout') {
             steps {
-                echo 'Build & test stage executed'
+                checkout scm
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sonarqube') {
-                    sh '''
-                        echo "Running SonarQube analysis"
-                        sonar-scanner \
-                        -Dsonar.projectKey=cicd-demo \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=$SONAR_HOST_URL \
-                        -Dsonar.login=$SONAR_AUTH_TOKEN
-                    '''
+                    sh 'sonar-scanner'
                 }
             }
-        }
-
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 2, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
-
-        stage('Docker Build') {
-            steps {
-                echo 'Docker build stage executed'
-            }
-        }
-
-        stage('Push to DockerHub') {
-            steps {
-                echo 'Push to DockerHub stage executed'
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                echo 'Deploy stage executed'
-            }
-        }
-    }
-
-    post {
-        success {
-            echo 'Pipeline completed successfully ✅'
-        }
-        failure {
-            echo 'Pipeline failed ❌'
         }
     }
 }
