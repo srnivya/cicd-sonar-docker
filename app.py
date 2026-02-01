@@ -2,4 +2,4 @@ def add(a, b):
     return a + b
 
 if __name__ == "__main__":
-    print("Hello CI/CD Pipeline")
+    print("Helllo CI/CD Pipeline")
